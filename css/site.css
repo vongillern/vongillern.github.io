@@ -683,7 +683,7 @@ main, .foot { position: relative; z-index: 1; }
   .bench-row { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; }
   .bench-row .bt-wrap { grid-column: 2 / 4; }
   .bench-row .by { grid-row: 1; grid-column: 3; }
-  .bench-row .thumb { display: block; grid-column: 2 / 4; margin-top: 12px; aspect-ratio: 16 / 9; object-fit: cover; width: 100%; border: 1px solid var(--line); }
+  .bench-row .thumb { display: block; grid-column: 2 / 4; margin-top: 12px; aspect-ratio: 16 / 9; object-fit: cover; width: 100%; height: auto; border: 1px solid var(--line); }
 }
 
 /* ---------- R&D ---------- */
