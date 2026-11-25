@@ -7,7 +7,7 @@
 //   only adds the motion and the demos. index.template.html renders everything.
 import { site, asset } from '../content/site.js';
 import { createHero, AXES } from './hero.js';
-import { roomScan, igorDemo, pioneerDemo, rndTerminal, airplaneCells } from './demos.js';
+import { roomScan, igorDemo, pioneerDemo, rndTerminal, airplaneCells, enigmaPath } from './demos.js';
 
 const { gsap, ScrollTrigger, SplitText, ScrambleTextPlugin, DrawSVGPlugin, TextPlugin } = window;
 gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin, DrawSVGPlugin, TextPlugin);
@@ -84,7 +84,7 @@ function renderHud() {
     <a class="hud-brand" href="#top" aria-label="${esc(site.person.name)}, back to top">${esc(site.person.name)}</a>
     <div class="hud-center label"><span>${esc(site.person.coords)}</span><span>·</span><span>${esc(city)}</span><span>·</span><time class="clock num">--:--:--</time><span class="tz">CT</span></div>
     <nav class="hud-nav label" aria-label="Sections">
-      <a href="#work" data-nav="work">Work</a><a href="#rnd" data-nav="rnd">R&amp;D</a><a href="#field" data-nav="field">Field</a><a href="#log" data-nav="log">Log</a><a href="#contact" data-nav="contact">Contact</a>
+      <a href="#work" data-nav="work">Work</a><a href="#films" data-nav="films">Films</a><a href="#rnd" data-nav="rnd">R&amp;D</a><a href="#field" data-nav="field">Field</a><a href="#log" data-nav="log">Log</a><a href="#contact" data-nav="contact">Contact</a>
     </nav>
     <div class="hud-status label"><span class="pulse" aria-hidden="true"></span><span class="st-text">${esc(site.person.status)}</span><time class="clock-m num"></time></div>
   </div><span class="hud-prog" aria-hidden="true"><i></i></span>`;
@@ -184,7 +184,7 @@ const LAYOUT = {
   roomscale: { span: 7, h: 640, ar: '3 / 2' },
   finityforge: { span: 5, h: 640, ar: '4 / 3.4', screen: true },
   skyline: { span: 7, h: 520, ar: '16 / 9' },
-  films: { span: 5, h: 520, ar: '16 / 9' },
+  enigma: { span: 5, h: 520, ar: '4 / 3.6' },
   reduction: { span: 4, h: 620, ar: '1 / 0.95' },
   airplane: { span: 5, h: 620, ar: '3 / 3.3' },
   sermons: { span: 3, h: 620, ar: '1 / 1' },
@@ -219,9 +219,19 @@ function previewFor(w) {
     return `<div class="typo"><span class="label">${esc(w.kind)}</span><div class="big num">${esc(m?.value || w.name)}</div><span class="label">${esc(m?.label || '')}</span></div>`;
   }
   const vids = w.media.filter((m) => m.type === 'video' && m.device !== 'phone');
-  if (w.id === 'films' && vids.length > 1) {
-    return `${media(vids[0], { loop: false, cls: 'reel' })}<div class="ov ov-tl"><span class="chip reel-chip"><i></i><span>Reel 01 / ${pad2(vids.length)}</span></span></div>
-      <div class="ov ov-bl"><span class="note-line reel-note">${esc(vids[0].alt)}</span></div>`;
+  // Optical Enigma: the portrait film loop, and the stations of the light path beside it.
+  if (w.path?.length && vids.length) {
+    const turn = w.path.indexOf('Reflector');
+    return `<div class="enig">
+      <div class="enig-vid">${media(vids[0])}</div>
+      <div class="enig-side">
+        <div class="enig-head"><span class="label">Signal path · 1 key</span><span class="chip enig-chip"><i></i><span>${esc(w.path[w.path.length - 1])}</span></span></div>
+        <ol class="enig-path" aria-label="The path of the light for one key press">
+          ${w.path.map((p, i) => `<li class="${i <= turn ? 'in' : 'back'}"><span class="n num">${pad2(i + 1)}</span><span class="p">${esc(p)}</span></li>`).join('')}
+        </ol>
+        <p class="label enig-key"><span class="g">Green</span> to the reflector · <span class="r">red</span> back</p>
+      </div>
+    </div>`;
   }
   const lead = vids[0] || w.media[0];
   if (lead.type === 'video' && LAYOUT[w.id]?.screen) {
@@ -268,22 +278,8 @@ function initWorkPreviews() {
     }
     const air = $('.air', view);
     if (air) airplaneCells(air, { reduce: REDUCE });
-
-    // Films: play the reels one after another.
-    const reel = $('video.reel', view);
-    if (reel) {
-      const vids = w.media.filter((m) => m.type === 'video' && m.device !== 'phone');
-      let k = 0;
-      reel.addEventListener('ended', () => {
-        k = (k + 1) % vids.length;
-        reel.poster = asset(posterSrc(vids[k]));
-        reel.src = asset(vids[k].src);
-        reel.setAttribute('aria-label', vids[k].alt);
-        $('.reel-chip span', view).textContent = `Reel ${pad2(k + 1)} / ${pad2(vids.length)}`;
-        $('.reel-note', view).textContent = vids[k].alt;
-        reel.play().catch(() => {});
-      });
-    }
+    const enig = $('.enig', view);
+    if (enig) enigmaPath(enig, { reduce: REDUCE });
     if (REDUCE) return;
     // Slow camera moves on still images.
     const kb = $('img.kb', view);
@@ -308,12 +304,59 @@ function initWorkPreviews() {
   $$('.mod-open').forEach((b) => b.addEventListener('click', () => openDrawer(b.closest('.mod').dataset.id, b)));
 }
 
+/* ---------------- Screening room ---------------- */
+// The full films are on Azure blob storage (site.screening.host). The posters and loops are local.
+const filmUrl = (f, file) => `${site.screening.host}${f.folder}${file}`;
+const filmNo = (f) => `F-${pad2(site.screening.films.indexOf(f) + 1)}`;
+const filmSecs = (f) => { const [m, s] = f.duration.split(':').map(Number); return m * 60 + s; };
+
+// The player for a full film. Safari and phones take the adaptive HLS stream; other browsers take the MP4.
+function filmPlayer(f, { preload = 'none' } = {}) {
+  return `<div class="dr-film${f.h > f.w ? ' tall' : ''}" style="--ar:${f.w} / ${f.h}">
+    <video controls playsinline preload="${preload}" poster="${asset(f.poster)}" width="${f.w}" height="${f.h}" aria-label="${esc(f.title)}, ${esc(f.duration)}">
+      <source src="${esc(filmUrl(f, 'hls/master.m3u8'))}" type="application/vnd.apple.mpegurl">
+      <source src="${esc(filmUrl(f, f.mp4))}" type="video/mp4">
+    </video>
+  </div>`;
+}
+
+function renderFilms() {
+  const S = site.screening, films = S.films;
+  const [lead] = films;
+  const minutes = Math.round(films.reduce((t, f) => t + filmSecs(f), 0) / 60);
+  const mod = site.work.findIndex((w) => w.film === lead.id);
+  $('#films').innerHTML = `<div class="container">
+    ${secHead('Sec 03', 'Screening room', `${pad2(films.length)} ${films.length === 1 ? 'film' : 'films'} · ${minutes} min · sound on`)}
+    <div class="title-row"><h2 class="h2 rv">${esc(S.title)}</h2><p class="lede rv">${esc(S.lede)}</p></div>
+    <div class="feat rv">
+      <a class="feat-view" href="${esc(filmUrl(lead, lead.mp4))}" data-film="${lead.id}" aria-label="Play ${esc(lead.title)}, ${esc(lead.duration)}">
+        ${media({ type: 'video', src: lead.loop, poster: lead.loopPoster, w: 540, h: 960, alt: `${lead.title}: the opening seconds` })}
+        <span class="fc-play" aria-hidden="true"></span>
+      </a>
+      <div class="feat-body">
+        <div class="feat-bar"><span class="label">${filmNo(lead)} · ${esc(lead.kind)} · ${esc(lead.format)} · ${esc(lead.duration)}</span><span class="chip"><i></i>${esc(lead.look)}</span></div>
+        <h3>${esc(lead.title)}</h3>
+        <blockquote class="feat-q">${esc(lead.quote)}</blockquote>
+        <p class="feat-txt">${esc(lead.made)}</p>
+        <dl class="feat-facts">
+          <div><dt class="label">Picture</dt><dd>${esc(lead.picture)}</dd></div>
+          <div><dt class="label">Sound</dt><dd>${esc(lead.sound)}</dd></div>
+        </dl>
+        <div class="feat-act">
+          <a class="btn-play" href="${esc(filmUrl(lead, lead.mp4))}" data-film="${lead.id}"><span class="tri" aria-hidden="true"></span>Play with sound · ${esc(lead.duration)}</a>
+          ${mod >= 0 ? `<a class="feat-link label" href="#work" data-mod="${site.work[mod].id}">The machine · M-${pad2(mod + 1)} →</a>` : ''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
 /* ---------------- Bench ---------------- */
 function renderBench() {
   const list = site.builds;
   const first = list.find((b) => b.media);
   $('#bench').innerHTML = `<div class="container">
-    ${secHead('Sec 03', 'Bench', `${pad2(list.length)} builds · ${list[0]?.year || ''}`)}
+    ${secHead('Sec 04', 'Bench', `${pad2(list.length)} builds · ${list[0]?.year || ''}`)}
     <div class="title-row"><h2 class="h2 rv">On the bench.</h2><p class="lede rv">Smaller builds and experiments.</p></div>
     <div class="bench-wrap">
       <ol class="bench-list" role="list">
@@ -375,7 +418,7 @@ function renderRnd() {
   const mono = site.experience.find((e) => e.org === 'Monotype');
   const patents = site.stats.find((s) => /patent/i.test(s.label));
   $('#rnd').innerHTML = `<div class="container">
-    ${secHead('Sec 04', 'R&amp;D log', `${esc(mono?.org || '')} · ${esc(mono?.years || '')}`)}
+    ${secHead('Sec 05', 'R&amp;D log', `${esc(mono?.org || '')} · ${esc(mono?.years || '')}`)}
     <div class="title-row"><h2 class="h2 rv">Type that reads differently to people and to machines.</h2>
       <p class="lede rv">${patents ? `${esc(patents.value)} ${esc(patents.label)} at ${esc(mono?.org || '')}. ` : ''}${esc(heo.name)} ${esc(heo.summary.split('. ').slice(-1)[0].replace(/^It /, ''))}</p></div>
     <div class="term rv">
@@ -416,7 +459,7 @@ function renderField() {
   const ig = S.igor, pi = S.pioneer, wc = S.webcare;
   const role = (org) => site.experience.find((e) => e.org === org)?.role || '';
   $('#field').innerHTML = `<div class="container">
-    ${secHead('Sec 05', 'Field work', `${esc(pi.years.split('–')[0])}–${esc(wc.years.split('–')[1])} · before Monotype`)}
+    ${secHead('Sec 06', 'Field work', `${esc(pi.years.split('–')[0])}–${esc(wc.years.split('–')[1])} · before Monotype`)}
     <div class="title-row"><h2 class="h2 rv">Problems from the field.</h2><p class="lede rv">Three older problems, drawn as instruments. The demos are illustrations of the method.</p></div>
     <div class="field-grid">
       <div class="panel p-igor rv">
@@ -485,7 +528,7 @@ function renderArchive() {
   const yrs = items.map((a) => parseInt(String(a.year).replace(/\D/g, ''), 10)).filter(Boolean);
   const abLabel = (a, k) => (a.id === 'regexpixie' ? (k ? '2026' : '2012') : k ? '02' : '01');
   $('#archive').innerHTML = `<div class="container">
-    ${secHead('Sec 06', 'Archive', `Shipped before · ${Math.min(...yrs)}–${Math.max(...yrs)}`)}
+    ${secHead('Sec 07', 'Archive', `Shipped before · ${Math.min(...yrs)}–${Math.max(...yrs)}`)}
     <div class="title-row"><h2 class="h2 rv">Shipped before.</h2><p class="lede rv">Earlier products. The old screenshots come from the Wayback Machine.</p></div>
     <div class="arch-grid">
       ${items.map((a) => {
@@ -543,7 +586,7 @@ function initArchive() {
 function renderLog() {
   const ex = site.experience;
   $('#log').innerHTML = `<div class="container">
-    ${secHead('Sec 07', 'Log', `git log --graph · ${site.person.since} → now`)}
+    ${secHead('Sec 08', 'Log', `git log --graph · ${site.person.since} → now`)}
     <div class="title-row"><h2 class="h2 rv"><span class="yrs-n">${new Date().getFullYear() - site.person.since}</span> years, one branch.</h2><p class="lede rv">Newest first. ${site.domains.map(esc).join(' · ')}.</p></div>
     <div class="git-wrap">
       <svg class="git-svg" aria-hidden="true"><path class="git-line" fill="none" stroke="#C8FF4D" stroke-width="1.5"/><g class="git-nodes"></g></svg>
@@ -579,7 +622,7 @@ function layoutGit() {
 function renderContact() {
   const c = site.consulting, p = site.person;
   $('#contact').innerHTML = `<div class="container">
-    ${secHead('Sec 08', 'Contact', 'Open channel')}
+    ${secHead('Sec 09', 'Contact', 'Open channel')}
     <p class="prompt" aria-label="${esc(site.contact.line)}"><span class="gt">&gt;</span> <span class="typed">${esc(site.contact.line)}</span><span class="caret" aria-hidden="true"></span></p>
     <div class="contact-row">
       <a class="mail" href="mailto:${esc(p.email)}"><span>${esc(p.email)}</span><span class="arr" aria-hidden="true">→</span></a>
@@ -609,18 +652,69 @@ function renderFooter() {
 
 /* ---------------- Drawer ---------------- */
 let lastFocus = null;
+
+// Show html in the details panel. If the panel is already open (the next film), only the content changes.
+function openPanel(html, from, { play = false } = {}) {
+  const d = $('#drawer'), panel = $('.drawer-panel', d);
+  const wasOpen = !d.hidden;
+  panel.innerHTML = html;
+  if (!wasOpen) {
+    lastFocus = from || document.activeElement;
+    d.hidden = false;
+    window.lenis?.stop();
+    if (!REDUCE) {
+      gsap.fromTo($('.drawer-scrim', d), { opacity: 0 }, { opacity: 1, duration: 0.3 });
+      gsap.fromTo(panel, { x: 60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: 'expo.out' });
+    }
+  }
+  $$('video[data-autoplay]', panel).forEach((v) => v.play().catch(() => {}));
+  // The click is a user action, so the browser lets the film start with sound.
+  if (play) $('.dr-film video', panel)?.play().catch(() => {});
+  panel.scrollTop = 0;
+  panel.focus();
+}
+
+function openFilm(id, from) {
+  const S = site.screening, films = S.films;
+  const k = films.findIndex((f) => f.id === id); if (k < 0) return;
+  const f = films[k];
+  const prev = films[(k - 1 + films.length) % films.length], next = films[(k + 1) % films.length];
+  const who = `${f.voice} · ${f.date}`;
+  const facts = [['Picture', f.picture], ['Sound', f.sound], ['Made with', f.services], ['Time', f.time], ['Cost', f.cost && `${f.cost}, at list prices`]].filter(([, v]) => v);
+  const links = [
+    f.page && { label: 'Player page', href: S.host + f.page },
+    { label: 'MP4, 720p', href: filmUrl(f, f.mp4) },
+  ].filter(Boolean);
+  const nav = (g, dir) => `<button type="button" class="dr-nav-${dir}" data-film="${g.id}"><span class="label">${dir === 'prev' ? '← ' : ''}${filmNo(g)}${dir === 'next' ? ' →' : ''}</span><span>${esc(g.title)}</span></button>`;
+  openPanel(`
+    <div class="dr-bar"><span class="label">${filmNo(f)} · ${esc(f.kind)} · ${esc(f.format)} · ${esc(f.duration)}</span><button class="dr-close" data-close>Close <span>Esc</span></button></div>
+    <div class="dr-body dr-body--film">
+      ${filmPlayer(f, { preload: 'metadata' })}
+      <h3 id="drawer-title">${esc(f.title)}</h3>
+      <p class="label dr-who">${esc(f.look)} · ${esc(who)}</p>
+      <blockquote class="dr-quote">${esc(f.quote)}</blockquote>
+      <p class="dr-sum">${esc(f.made)}</p>
+      <div class="dr-pir">${facts.map(([t, v]) => `<div><span class="label">${t}</span><p>${esc(v)}</p></div>`).join('')}</div>
+      ${f.credit ? `<p class="label dr-credit">${esc(f.credit)}</p>` : ''}
+      <div class="dr-links">${links.map((l) => `<a href="${esc(l.href)}" target="_blank" rel="noopener">${esc(l.label)} ↗</a>`).join('')}</div>
+      ${films.length > 1 ? `<div class="dr-nav">${nav(prev, 'prev')}${nav(next, 'next')}</div>` : ''}
+    </div>`, from, { play: true });
+}
+
 function openDrawer(id, from) {
   const w = site.work.find((x) => x.id === id); if (!w) return;
   const i = site.work.indexOf(w);
-  const d = $('#drawer'), panel = $('.drawer-panel', d);
+  const film = w.film ? site.screening.films.find((f) => f.id === w.film) : null;
   const phones = w.media.filter((m) => m.device === 'phone');
-  const others = w.media.filter((m) => m.device !== 'phone');
-  panel.innerHTML = `
+  // With a full film in the panel, the short loop is not needed again.
+  const others = w.media.filter((m) => m.device !== 'phone' && !(film && m.type === 'video'));
+  openPanel(`
     <div class="dr-bar"><span class="label">M-${pad2(i + 1)} · ${esc(w.kind)} · ${esc(w.year)}</span><button class="dr-close" data-close>Close <span>Esc</span></button></div>
     <div class="dr-body">
       <h3 id="drawer-title">${esc(w.name)}</h3>
       <p class="dr-title">${esc(w.title)}</p>
       <p class="dr-sum">${esc(w.summary)}</p>
+      ${film ? `<div class="dr-filmbox"><div class="dr-filmhead"><span class="label"><b>The film</b> · ${esc(film.title)}</span><span class="label">${esc(film.format)} · ${esc(film.duration)} · sound on</span></div>${filmPlayer(film)}</div>` : ''}
       <div class="dr-pir">
         <div><span class="label">Problem</span><p>${esc(w.problem)}</p></div>
         <div><span class="label">Insight</span><p>${esc(w.insight)}</p></div>
@@ -634,17 +728,7 @@ function openDrawer(id, from) {
       ${w.models?.length ? `<p class="label" style="margin-top:28px">Same plan, ${w.models.length} models</p><div class="dr-stages" style="margin-top:10px">${w.models.map((m) => `<figure><img src="${asset(m.src)}" alt="Render by ${esc(m.name)}" loading="lazy"><figcaption class="label">${esc(m.name)}</figcaption></figure>`).join('')}</div>` : ''}
       ${phones.length ? `<div class="dr-media phones-row">${phones.map((m) => `<figure>${phone(m)}<figcaption class="label">${esc(m.alt)}</figcaption></figure>`).join('')}</div>` : ''}
       ${others.length ? `<div class="dr-media">${others.map((m) => `<figure>${media(m)}<figcaption class="label">${esc(m.alt)}</figcaption></figure>`).join('')}</div>` : ''}
-    </div>`;
-  lastFocus = from || document.activeElement;
-  d.hidden = false;
-  window.lenis?.stop();
-  $$('video[data-autoplay]', panel).forEach((v) => v.play().catch(() => {}));
-  if (!REDUCE) {
-    gsap.fromTo($('.drawer-scrim', d), { opacity: 0 }, { opacity: 1, duration: 0.3 });
-    gsap.fromTo(panel, { x: 60, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: 'expo.out' });
-  }
-  panel.scrollTop = 0;
-  panel.focus();
+    </div>`, from);
 }
 function closeDrawer() {
   const d = $('#drawer');
@@ -655,7 +739,16 @@ function closeDrawer() {
   gsap.to(panel, { x: 60, opacity: 0, duration: 0.3, ease: 'power2.in', onComplete: done });
   gsap.to($('.drawer-scrim', d), { opacity: 0, duration: 0.3 });
 }
-document.addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeDrawer(); });
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-close]')) return closeDrawer();
+  // A film card or a film button opens the film. Without scripts, the card is a link to the MP4.
+  // A click with a modifier key keeps the link, so the MP4 can open in a new tab.
+  const el = e.target.closest('[data-film], [data-mod]');
+  if (!el || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  e.preventDefault();
+  if (el.dataset.film) openFilm(el.dataset.film, el);
+  else openDrawer(el.dataset.mod, el);
+});
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
 
 /* ---------------- Videos ---------------- */
@@ -750,7 +843,7 @@ function initMotion() {
 
 /* ---------------- Navigation ---------------- */
 function initNav() {
-  const ids = ['readouts', 'work', 'bench', 'rnd', 'field', 'archive', 'log', 'contact'];
+  const ids = ['readouts', 'work', 'films', 'bench', 'rnd', 'field', 'archive', 'log', 'contact'];
   ids.forEach((id) => {
     ScrollTrigger.create({
       trigger: `#${id}`, start: 'top 50%', end: 'bottom 50%',
@@ -759,8 +852,8 @@ function initNav() {
   });
   const bar = $('.hud-prog i');
   ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (s) => { bar.style.transform = `scaleX(${s.progress.toFixed(4)})`; } });
-  // Smooth anchor links.
-  $$('a[href^="#"]').forEach((a) => a.addEventListener('click', (e) => {
+  // Smooth anchor links. A link with data-mod opens a details panel instead (see the click handler).
+  $$('a[href^="#"]:not([data-mod])').forEach((a) => a.addEventListener('click', (e) => {
     const id = a.getAttribute('href');
     const t = id === '#top' ? 0 : $(id);
     if (t === null) return;
@@ -818,6 +911,7 @@ function renderAll() {
   renderHeroCopy();
   renderReadouts();
   renderWork();
+  renderFilms();
   renderBench();
   renderRnd();
   renderField();

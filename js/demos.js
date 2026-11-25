@@ -383,3 +383,28 @@ export function airplaneCells(root, { reduce }) {
   tl.call(done);
   whenVisible(root, (v) => (v ? tl.play() : tl.pause()));
 }
+
+/* ------------------------------------------------------------------ */
+/* Optical Enigma: the light goes station by station, then rests.      */
+/* ------------------------------------------------------------------ */
+export function enigmaPath(root, { reduce }) {
+  const items = [...root.querySelectorAll('.enig-path li')];
+  const chip = root.querySelector('.enig-chip span');
+  if (!items.length) return;
+  const names = items.map((li) => li.querySelector('.p').textContent);
+  // The markup shows the full path. That is also the state without motion.
+  const all = () => { items.forEach((li) => { li.classList.add('lit'); li.classList.remove('head'); }); chip.textContent = names[names.length - 1]; };
+  all();
+  if (reduce) return;
+  const tl = gsap.timeline({ repeat: -1, paused: true });
+  tl.call(() => items.forEach((li) => li.classList.remove('lit', 'head')));
+  tl.to({}, { duration: 0.35 });
+  items.forEach((li, i) => tl.call(() => {
+    items.forEach((x) => x.classList.remove('head'));
+    li.classList.add('lit', 'head');
+    chip.textContent = names[i];
+  }, null, '+=0.38'));
+  tl.call(all, null, '+=0.38');
+  tl.to({}, { duration: 2.2 });
+  whenVisible(root, (v) => (v ? tl.play() : tl.pause()));
+}

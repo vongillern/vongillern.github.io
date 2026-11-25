@@ -163,36 +163,37 @@ export const site = {
       links: [{ label: "Source on GitHub", href: "https://github.com/vongillern/claude-skyline" }],
     },
     {
-      id: "films",
-      name: "Films made of code",
+      id: "enigma",
+      name: "Optical Enigma",
       year: "2026",
-      kind: "Motion · Type · AI audio",
-      title: "The caption is the scene.",
+      kind: "Optics · CAD · Film",
+      title: "An Enigma machine with no wires. Every letter travels as light.",
       summary:
-        "Sermon clips where the words become the world: road paint in fog, stencils across 32,000 stadium seats, wood type on a letterpress bed, footprints in snow.",
+        "A 3D-printed Enigma I with one laser, a mirror on every key, and 78 plastic fibres in three rotors. The CAD is code, and so is the film that explains it.",
       problem:
-        "Captioned video usually puts text on top of a picture. I wanted the type to carry the voice, the same idea behind Dynamic Captions.",
+        "An Enigma hides its work. The scramble happens in brass contacts and wires inside the rotors, where nobody can see it.",
       insight:
-        "Make every frame a pure function of time. Then a browser can render it frame by frame, exactly, and any scene can be built from code.",
+        "Carry each letter as light, in side-glow fibre, and the path shows itself. One laser is enough: each key lever carries a small mirror on a mast, and a pressed key swings its mirror into the beam and turns the light down into the fibre of its letter. One laser, 26 inputs: an optical multiplexer.",
       result:
-        "Each film is an HTML and three.js page. Headless Chromium seeks each frame and pipes it to ffmpeg. Voices, music and word times come from ElevenLabs and AssemblyAI with forced alignment.",
+        "The machine is modelled in code with three.js and manifold-3d, so every STL is a printable solid. Rotors I to V have the real wirings, the reflector is 13 loops of fibre, and the pawls make the real double step, tested over 750 key presses. The mirror of the pressed key covers its own lamp, so a letter never becomes itself, as on the real machine. The parts print flat, without supports, in about a day on one printer.",
       metrics: [
-        { value: "32,000", label: "instanced stadium seats" },
-        { value: "48", label: "commits in 14 days" },
-        { value: "t → frame", label: "every frame is deterministic" },
+        { value: "1", label: "laser for 26 keys" },
+        { value: "78", label: "fibres in three rotors" },
+        { value: "~24 h", label: "to print, on one printer" },
+        { value: "0", label: "microcontrollers" },
       ],
-      stack: ["three.js", "Playwright", "ffmpeg", "Blender", "ElevenLabs", "AssemblyAI"],
+      stack: ["three.js", "manifold-3d", "Vite", "node:test", "ElevenLabs", "ffmpeg"],
+      // The details panel plays this film from screening.films.
+      film: "enigma",
+      // The module lights these stations in order: green to the reflector, red back to the lamp.
+      path: ["Key", "Mirror", "Rotor III", "Rotor II", "Rotor I", "Reflector", "Rotor I", "Rotor II", "Rotor III", "Lamp"],
       media: [
-        { type: "video", src: "assets/shots/film-letterpress-loop.mp4", poster: "assets/shots/film-letterpress.webp", w: 960, h: 540, alt: "Wood type on a letterpress bed." },
-        { type: "video", src: "assets/shots/film-stadium-loop.mp4", poster: "assets/shots/film-stadium.webp", w: 960, h: 540, alt: "Words spelled out across red stadium seats." },
-        { type: "video", src: "assets/shots/film-fog-loop.mp4", poster: "assets/shots/film-fog.webp", w: 960, h: 540, alt: "Words painted on a road in fog." },
-        { type: "video", src: "assets/shots/film-snow-loop.mp4", poster: "assets/shots/film-snow.webp", w: 960, h: 540, alt: "Words on a snowy mountain." },
-      ],
-      stills: [
-        "assets/shots/film-letterpress.webp", "assets/shots/film-stadium.webp", "assets/shots/film-fog.webp",
-        "assets/shots/film-snow.webp", "assets/shots/film-tabernacle.webp", "assets/shots/film-chalk.webp",
-        "assets/shots/film-keylight.webp", "assets/shots/film-silverpoint.webp", "assets/shots/film-wireframe.webp",
-        "assets/shots/film-roof.webp",
+        { type: "video", src: "assets/shots/enigma-path-loop.mp4", poster: "assets/shots/enigma-path-loop-poster.webp", w: 540, h: 960, alt: "A key press: the light runs through three rotors, comes back from the reflector, and lights a lamp." },
+        { type: "image", src: "assets/shots/enigma-model-b.webp", w: 1300, h: 850, alt: "Model B: one green laser, and the light path of one key press through the rotors." },
+        { type: "image", src: "assets/shots/enigma-levers.webp", w: 1300, h: 850, alt: "The key levers. Each mast carries a mirror below the beam." },
+        { type: "image", src: "assets/shots/enigma-reflector.webp", w: 1300, h: 850, alt: "The reflector: 13 loops of fibre join the 26 stations in pairs." },
+        { type: "image", src: "assets/shots/enigma-stepping.webp", w: 1500, h: 950, alt: "The stepping: a bail, three pawls and the rotor ratchets make the double step." },
+        { type: "image", src: "assets/shots/enigma-exploded.webp", w: 1500, h: 950, alt: "An exploded view of the machine." },
       ],
       links: [],
     },
@@ -270,6 +271,39 @@ export const site = {
     },
   ],
 
+
+  // The Screening room: films made with code, in the order of the page.
+  // The full films stream from Jon's public Azure blob container: host + folder holds
+  // hls/master.m3u8 (adaptive) and an MP4 copy (mp4). Do not delete those files.
+  // The posters and the short silent loops are in assets/shots (tools/build_assets.py).
+  screening: {
+    host: "https://vongillern.blob.core.windows.net/public/",
+    title: "The caption is the scene.",
+    lede: "Films made with code. Each frame is a function of time, so a browser can render it exactly, one frame at a time. Press play for sound.",
+    films: [
+      {
+        id: "enigma",
+        title: "The Optical Enigma",
+        look: "Light path",
+        kind: "Explainer",
+        format: "9:16", w: 720, h: 1280,
+        duration: "2:00",
+        date: "November 14, 2026",
+        voice: "A synthetic narrator (ElevenLabs v4)",
+        quote: "“No wire carries a single letter. Every letter travels as light.”",
+        made: "A two-minute explainer of the Optical Enigma: some history, the rotors, the fibres, the one-laser keyboard, and what is different from the real Enigma I. Every part on screen is the real CAD model, and every move comes from its code: the key strokes, the pawls and the double step, the fibre routes and the light path. The letters on the lamps are what the machine gives for those keys, and the crib WETTERBERICHT slides along real cipher text.",
+        picture: "three.js with the meshes of the real CAD, bloom on the light only, IBM Plex type",
+        sound: "A synthetic narrator, music, and key sounds on the real key presses, from ElevenLabs",
+        services: "ElevenLabs v4, Eleven Music, ElevenLabs Sound Effects, Gemini, Claude",
+        poster: "assets/shots/film-enigma.webp",
+        loop: "assets/shots/film-enigma-loop.mp4",
+        loopPoster: "assets/shots/film-enigma-loop-poster.webp",
+        folder: "enigma-light/9x16-r2/",
+        mp4: "enigma-light-9x16-720p.mp4",
+        page: "enigma-light/index.html",
+      },
+    ],
+  },
   // Monotype R&D, 2022 to 2025. No screenshots exist; variants illustrate these.
   inventions: [
     {
