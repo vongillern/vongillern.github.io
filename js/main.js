@@ -8,6 +8,7 @@
 import { site, asset } from '../content/site.js';
 import { createHero, AXES } from './hero.js';
 import { roomScan, igorDemo, pioneerDemo, rndTerminal, airplaneCells, enigmaPath } from './demos.js';
+import { createPantrySim, findZone, describeZone } from './pantry-sim.js';
 
 const { gsap, ScrollTrigger, SplitText, ScrambleTextPlugin, DrawSVGPlugin, TextPlugin } = window;
 gsap.registerPlugin(ScrollTrigger, SplitText, ScrambleTextPlugin, DrawSVGPlugin, TextPlugin);
@@ -185,6 +186,7 @@ const LAYOUT = {
   finityforge: { span: 5, h: 640, ar: '4 / 3.4', screen: true },
   skyline: { span: 7, h: 520, ar: '16 / 9' },
   enigma: { span: 5, h: 520, ar: '4 / 3.6' },
+  pantry: { span: 12, h: 560, ar: '16 / 10' },
   reduction: { span: 4, h: 620, ar: '1 / 0.95' },
   airplane: { span: 5, h: 620, ar: '3 / 3.3' },
   sermons: { span: 3, h: 620, ar: '1 / 1' },
@@ -198,6 +200,21 @@ function previewFor(w) {
   if (w.id === 'roomscale' && w.stages?.length) {
     const s = w.stages[0];
     return `<img class="rs-layer" src="${asset(s.src)}"${srcset({ ...s, w: 1500 }, '(max-width: 899px) 100vw, 58vw')} width="1500" height="1001" alt="${esc(s.label)}: ${esc(s.note)}" loading="lazy" decoding="async">`;
+  }
+  // Disco Pantry: a live model of the pantry LEDs, and what the tablet heard. Without scripts, the photo shows.
+  if (w.sim) {
+    return `<div class="pan">
+      <div class="pan-view"><canvas class="pan-canvas" aria-hidden="true"></canvas>${media(w.media[0], { cls: 'pan-photo', sizes: '(max-width: 899px) 100vw, 70vw' })}</div>
+      <div class="pan-side">
+        <div class="pan-head"><span class="label">Live model · 184 LEDs</span><span class="chip"><i></i><span class="pan-mode">Guide lights</span></span></div>
+        <dl class="pan-read">
+          <div><dt class="label">Heard</dt><dd class="pan-heard">“goldfish crackers”</dd></div>
+          <div><dt class="label">Zone</dt><dd class="pan-zone">Goldfish and graham crumbs</dd></div>
+          <div><dt class="label">Where</dt><dd class="pan-where"><span class="sw"></span><span class="w">Back wall · shelf 2</span></dd></div>
+        </dl>
+        <p class="label pan-key"><span class="g">Green</span> the zone · <span class="r">red</span> ripples lead in</p>
+      </div>
+    </div>`;
   }
   const phones = w.media.filter((m) => m.device === 'phone');
   if (phones.length) {
@@ -247,6 +264,25 @@ function previewFor(w) {
   return media(lead, { cls: 'kb', sizes: modSizes(w) });
 }
 
+// The Disco Pantry module: the model lights one item after the other.
+function pantryModule(root) {
+  const sim = createPantrySim($('.pan-canvas', root), { reduce: REDUCE, onEnd: () => setTimeout(next, 900) });
+  root.classList.add('live');
+  const ITEMS = ['goldfish crackers', 'cereal', 'tomato soup', 'paper towels', 'flour', 'peanut butter'];
+  let k = -1;
+  function next() {
+    k = (k + 1) % ITEMS.length;
+    const z = findZone(ITEMS[k]).zone, d = describeZone(z);
+    $('.pan-heard', root).textContent = `“${ITEMS[k]}”`;
+    $('.pan-zone', root).textContent = z.name;
+    $('.pan-where .w', root).textContent = d.where;
+    $('.pan-where .sw', root).style.background = `rgb(${d.color.join(',')})`;
+    sim.guide(z);
+    if (!REDUCE) setTimeout(() => sim.end(), 6000);
+  }
+  next();
+}
+
 function renderWork() {
   $('#work').innerHTML = `<div class="container">
     ${secHead('Sec 02', 'Work modules', `${pad2(site.work.length)} modules · ${site.work[0].year}`)}
@@ -259,7 +295,7 @@ function renderWork() {
           <button class="mod-open" aria-label="Open details: ${esc(w.name)}"></button>
           <header class="mod-bar"><span class="label">M-${pad2(i + 1)}</span><span class="mod-name">${esc(w.name)}</span><span class="label kind">${esc(w.kind)}</span><span class="label">${esc(w.year)}</span><span class="mod-plus" aria-hidden="true"></span></header>
           <div class="mod-view">${previewFor(w)}</div>
-          <footer class="mod-foot"><p class="mod-title">${esc(w.title)}</p>${met ? `<p class="mod-met"><span class="v num">${esc(met.value)}</span><span class="label">${esc(met.label)}</span></p>` : ''}</footer>
+          <footer class="mod-foot"><p class="mod-title">${esc(w.title)}${w.story ? ` <a class="mod-story label" href="${esc(w.story.href)}">Case study <span aria-hidden="true">→</span></a>` : ''}</p>${met ? `<p class="mod-met"><span class="v num">${esc(met.value)}</span><span class="label">${esc(met.label)}</span></p>` : ''}</footer>
           <span class="crn4" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
         </article>`;
       }).join('')}
@@ -280,6 +316,8 @@ function initWorkPreviews() {
     if (air) airplaneCells(air, { reduce: REDUCE });
     const enig = $('.enig', view);
     if (enig) enigmaPath(enig, { reduce: REDUCE });
+    const panMod = $('.pan', view);
+    if (panMod) pantryModule(panMod);
     if (REDUCE) return;
     // Slow camera moves on still images.
     const kb = $('img.kb', view);
@@ -714,6 +752,7 @@ function openDrawer(id, from) {
       <h3 id="drawer-title">${esc(w.name)}</h3>
       <p class="dr-title">${esc(w.title)}</p>
       <p class="dr-sum">${esc(w.summary)}</p>
+      ${w.story ? `<a class="btn-play dr-story" href="${esc(w.story.href)}">${esc(w.story.label)} <span aria-hidden="true">→</span></a>` : ''}
       ${film ? `<div class="dr-filmbox"><div class="dr-filmhead"><span class="label"><b>The film</b> · ${esc(film.title)}</span><span class="label">${esc(film.format)} · ${esc(film.duration)} · sound on</span></div>${filmPlayer(film)}</div>` : ''}
       <div class="dr-pir">
         <div><span class="label">Problem</span><p>${esc(w.problem)}</p></div>

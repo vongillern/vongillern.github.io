@@ -198,6 +198,38 @@ export const site = {
       links: [],
     },
     {
+      id: "pantry",
+      name: "Disco Pantry",
+      year: "2026",
+      kind: "Voice · LEDs · AI",
+      title: "Say the item. The shelf lights up, and red ripples lead you to it.",
+      summary:
+        "A wall tablet and 184 LEDs on the wire shelves of our pantry. A kid says \u201cHey Jarvis, goldfish crackers\u201d, and the right spot lights up.",
+      problem:
+        "Thirty places on three walls of shelves, and kids who put things wherever there is a gap. Labels do not help a kid with an armful of boxes.",
+      insight:
+        "Make the shelf the answer, not the screen. The tablet knows the 3D position of every LED, so all the other LEDs can point at the zone: red ripples move in to it from every side. And the AI never says \u201cI do not know\u201d: it always chooses, and a correction is remembered.",
+      result:
+        "The wake word runs on the tablet for free. An audio model writes down the words for less than $0.001, and learned words skip the AI. The tablet streams full LED frames to WLED about 20 times each second. A camera finds all 200 LEDs by making each one blink its own number in binary. A parametric 3D-printed clip snaps the string onto the wire shelves. About $70 of parts, built in two weeks. And a disco button.",
+      metrics: [
+        { value: "184", label: "LEDs on 4 shelves" },
+        { value: "$0", label: "to hear \u201cHey Jarvis\u201d" },
+        { value: "< $0.001", label: "per spoken item" },
+        { value: "~$70", label: "of parts" },
+      ],
+      stack: ["Preact", "TypeScript", "onnxruntime-web", "openWakeWord", "WLED", "ESP32", "WS2812B", "OpenRouter", "Web Audio", "three.js", "Vitest"],
+      // The module draws a live model of the pantry LEDs (js/pantry-sim.js). Without scripts, the first photo shows.
+      sim: true,
+      // The long case study. The details panel links to it.
+      story: { href: "pantry.html", label: "Read the full case study" },
+      media: [
+        { type: "image", src: "assets/shots/pantry-doorway.webp", w: 1600, h: 1200, alt: "The pantry from the door: wire shelves on three walls, full of boxes, jars and cans." },
+        { type: "image", src: "assets/shots/pantry-back-right.webp", w: 1600, h: 1200, alt: "The back and right walls of the pantry, before the LEDs went in." },
+        { type: "image", src: "assets/shots/pantry-clip-iso.webp", w: 1300, h: 975, alt: "The 3D-printed clip on two shelf bars, with the LED string in its light hook." },
+      ],
+      links: [],
+    },
+    {
       id: "reduction",
       name: "Reduction",
       year: "2026",

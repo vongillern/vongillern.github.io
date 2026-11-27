@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Disco Pantry — a pantry that shows kids where things go · Jon von Gillern</title>
+  <meta name="description" content="A kid says “Hey Jarvis, goldfish crackers.” 184 LEDs on the wire shelves light the right spot, and red ripples guide the kid to it. A case study: wake word, AI zone choice, 3D guide lights, and a camera that finds every LED.">
+  <meta name="theme-color" content="#0B0C0E">
+  <meta name="color-scheme" content="dark">
+  <meta name="author" content="Jon von Gillern">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Jon von Gillern">
+  <meta property="og:title" content="Disco Pantry: a pantry that shows kids where things go">
+  <meta property="og:description" content="Say the item. The shelf lights up. A case study in voice, LEDs and cheap AI.">
+  <meta property="og:image" content="https://vongillern.github.io/assets/og-pantry.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The pantry from the door, drawn as 184 LEDs. Red ripples run along the shelves to one green zone.">
+  <meta property="og:url" content="https://vongillern.github.io/pantry.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://vongillern.github.io/assets/og-pantry.jpg">
+  <link rel="canonical" href="https://vongillern.github.io/pantry.html">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/geist-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/app.min.css?v=467e249115">
+      <link rel="stylesheet" href="css/pantry.min.css?v=dfed9be41d">
+</head>
+<body class="pt">
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="grid-overlay" aria-hidden="true"><div class="container"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+
+  <header class="pt-hud">
+    <div class="container">
+      <a class="pt-back label" href="./#work"><span aria-hidden="true">←</span> Jon von Gillern</a>
+      <span class="pt-hud-c label">Case study · <b>Disco Pantry</b></span>
+      <nav class="pt-nav label" aria-label="Chapters">
+        <a href="#loop">Loop</a><a href="#wake">Wake word</a><a href="#lights">Lights</a><a href="#finder">Finder</a><a href="#build">Build</a><a href="#disco">Disco</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="pt-hero" aria-labelledby="pt-title">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">Case study</span><span class="label sh">Disco Pantry</span><span class="label">2026 · Home · Voice · LEDs · AI</span></div>
+        <div class="pt-hero-copy">
+          <h1 id="pt-title" class="pt-h1">A pantry that shows kids where things go.</h1>
+          <p class="pt-lede">A kid says <q>Hey Jarvis, goldfish crackers.</q> LEDs on the wire shelves light the right spot, and red ripples run along the shelves toward it. A tablet, 184 LEDs, about $70 of parts, and less than a dollar of AI each month. I built it for my kids in two weeks.</p>
+        </div>
+
+        <figure class="pt-stage" id="demo">
+          <div class="pt-stage-bar">
+            <span class="label">Live model · 184 LEDs · from the door</span>
+            <span class="chip"><i></i><span class="pt-mode">Guide lights</span></span>
+          </div>
+          <div class="pt-stage-view">
+            <canvas class="pt-canvas" aria-label="A model of the pantry from the door. The LEDs on the shelves light the zone of an item, and red ripples move toward it."></canvas>
+            <img class="pt-fallback" src="assets/shots/pantry-doorway-1200.webp" alt="The pantry from the door: wire shelves on three walls, full of food." width="1200" height="900" loading="eager" decoding="async">
+            <div class="pt-readout" aria-live="polite">
+              <p class="label">Heard</p>
+              <p class="pt-heard">“goldfish crackers”</p>
+              <p class="label">Zone</p>
+              <p class="pt-zone">Goldfish and graham crumbs</p>
+              <p class="pt-where label"><span class="sw" style="--c:#00FF46"></span><span class="w">Back wall · shelf 2</span></p>
+              <p class="pt-hint">The item goes on the lit shelf.</p>
+            </div>
+          </div>
+          <form class="pt-ask" autocomplete="off">
+            <label class="label" for="pt-say">Say an item</label>
+            <div class="pt-ask-row">
+              <input id="pt-say" name="say" type="text" placeholder="peanut butter" maxlength="40" enterkeyhint="go">
+              <button type="submit" class="pt-go">Light it</button>
+            </div>
+            <div class="pt-chips" role="group" aria-label="Examples">
+              <button type="button" data-say="goldfish">Goldfish</button>
+              <button type="button" data-say="cereal">Cereal</button>
+              <button type="button" data-say="tomato soup">Tomato soup</button>
+              <button type="button" data-say="flour">Flour</button>
+              <button type="button" data-say="paper towels">Paper towels</button>
+              <button type="button" data-say="party mix">Party mix</button>
+              <button type="button" data-say="let's party" class="disco">🪩 Disco</button>
+            </div>
+          </form>
+          <figcaption class="label pt-cap">The guide-light math on this page is a copy of the tablet code. The tablet asks an AI model for the zone; this page uses a short word list.</figcaption>
+        </figure>
+
+        <div class="dr-met pt-met">
+          <div><span class="v num">184</span><span class="label">LEDs on 4 shelves</span></div>
+          <div><span class="v num">30</span><span class="label">zones on 3 walls</span></div>
+          <div><span class="v num">$0</span><span class="label">to hear “Hey Jarvis”</span></div>
+          <div><span class="v num">&lt; $0.001</span><span class="label">per spoken item</span></div>
+          <div><span class="v num">~20 fps</span><span class="label">frames to the LEDs</span></div>
+          <div><span class="v num">~$70</span><span class="label">of parts</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-sec" id="problem" aria-labelledby="h-problem">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">01</span><span class="label sh">The problem</span><span class="label">3 walls · 5 shelves · 30 zones</span></div>
+        <div class="pt-split">
+          <div class="pt-text">
+            <h2 id="h-problem" class="pt-h2">Everything has a place. Nobody knows where it is.</h2>
+            <p>Our pantry is a U of wire shelves: three walls, five shelves on each wall, and about thirty places where things live. Cereal goes on the back wall, shelf 4, at the left end. Goldfish go two shelves lower. The tomato soup goes in a can rack on the floor.</p>
+            <p>When the kids help put the groceries away, things land wherever there is a gap. Labels do not help a kid with an armful of boxes. A kid must be able to ask the pantry, and the pantry must point.</p>
+            <p>So the goals were simple:</p>
+            <ul class="pt-list">
+              <li>Ask with your voice, with no tap and no reading.</li>
+              <li>See the answer on the shelf itself, not on a screen.</li>
+              <li>Always give an answer. Learn from each mistake.</li>
+              <li>Cost almost nothing to run.</li>
+            </ul>
+          </div>
+          <figure class="pt-photo">
+            <img src="assets/shots/pantry-doorway.webp" srcset="assets/shots/pantry-doorway-800.webp 800w, assets/shots/pantry-doorway-1200.webp 1200w, assets/shots/pantry-doorway.webp 1600w" sizes="(max-width: 899px) 100vw, 50vw" width="1600" height="1200" alt="The pantry from the door: wire shelves on the left, back and right walls, full of boxes, jars and cans." loading="lazy" decoding="async">
+            <figcaption class="label">The pantry on 2026-11-13, the day the project started. The first zone list came from this photo.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-sec" id="loop" aria-labelledby="h-loop">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">02</span><span class="label sh">The loop</span><span class="label">Say · hear · choose · light · learn</span></div>
+        <div class="pt-intro">
+          <h2 id="h-loop" class="pt-h2">Five steps from a word to a lit shelf.</h2>
+          <p>A wall tablet runs the whole loop in the browser. Each step uses the cheapest thing that works, and the expensive steps happen once per item, not once per question.</p>
+        </div>
+        <ol class="pt-loop">
+          <li>
+            <span class="label n">01 · Wake</span>
+            <h3>“Hey Jarvis”</h3>
+            <p>The tablet hears the wake word itself, with three small neural networks in the browser. No audio leaves the tablet before the wake word.</p>
+            <p class="pt-cost label"><b>$0</b> · on the tablet</p>
+          </li>
+          <li>
+            <span class="label n">02 · Hear</span>
+            <h3>The words</h3>
+            <p>After a beep, the tablet records the phrase. An audio model on OpenRouter writes the words down. This call is short: it does not get the zone list.</p>
+            <p class="pt-cost label"><b>&lt; $0.001</b> · Gemini Flash Lite</p>
+          </li>
+          <li>
+            <span class="label n">03 · Choose</span>
+            <h3>The zone</h3>
+            <p>Learned words give their zone at once. New words go to a model with the list of 30 zones. The list has no “unknown” option. With no internet, a word match chooses.</p>
+            <p class="pt-cost label"><b>$0</b> if learned · a model if new</p>
+          </li>
+          <li>
+            <span class="label n">04 · Light</span>
+            <h3>The shelf</h3>
+            <p>The tablet calculates the color of all 184 LEDs and streams full frames to the WLED controller, about 20 each second. The 3D view on the tablet shows the same frames.</p>
+            <p class="pt-cost label"><b>10 s</b> · then the lights fold away</p>
+          </li>
+          <li>
+            <span class="label n">05 · Learn</span>
+            <h3>The memory</h3>
+            <p>The tablet remembers each answer with the words that the kid said. If the spot is wrong, the kid taps <b>Wrong spot?</b> and chooses. That choice wins from then on.</p>
+            <p class="pt-cost label"><b>Next time</b> · no AI call</p>
+          </li>
+        </ol>
+
+        <div class="pt-callout">
+          <p class="label">Design rule</p>
+          <p class="pt-callout-t">It never says “I do not know.”</p>
+          <p>A shrug teaches nothing, and the kid walks away. A near guess still gets the item to the right wall, and a tap on <b>Wrong spot?</b> fixes that item forever. So the model must always choose a zone, and the fallback must always choose one too. “goldfish”, “Goldfish” and “goldfish cracker” all become the same learned item.</p>
+        </div>
+
+        <div class="pt-two">
+          <div>
+            <p class="label">The other way in · the camera</p>
+            <ol class="pt-steps">
+              <li>A kid taps <b>Camera</b>. The tablet looks for a barcode with zxing-wasm.</li>
+              <li>A known barcode shows its place at once. It costs nothing.</li>
+              <li>A new barcode gets its product name from Open Food Facts, which is free.</li>
+              <li>A vision model gets the photo and the name, and chooses one zone. Claude Haiku costs about <b>$0.0003</b> per scan.</li>
+              <li>The tablet remembers the barcode. The next scan needs no AI.</li>
+            </ol>
+          </div>
+          <div>
+            <p class="label">A second opinion · Jev</p>
+            <p>A parent can switch the zone chooser to Jev, a “System One” model from TypeSafe. Jev does not write text. It gets the state and a typed question, and gives back a calibrated probability for each zone. With barcode data, Jev alone chooses for about <b>$0.00003</b>. Jev cannot see photos, so with a photo only, the scan model names the item first and Jev chooses the zone.</p>
+            <p class="pt-note label">On both paths, a model that is not sure makes the tablet ask the kid to say the name of the item.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-sec" id="wake" aria-labelledby="h-wake">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">03</span><span class="label sh">The wake word</span><span class="label">openWakeWord · onnxruntime-web</span></div>
+        <div class="pt-intro">
+          <h2 id="h-wake" class="pt-h2">The tablet listens all day. It sends nothing until it hears its name.</h2>
+          <p>A microphone that is always on must be private and free. So the wake word runs on the tablet, in the browser, with the openWakeWord models. The tablet is on its charger, so power is not a problem.</p>
+        </div>
+        <div class="pt-chain" role="list" aria-label="The wake word pipeline, for each 80 ms of audio">
+          <div role="listitem"><span class="label">Audio</span><b class="num">80 ms</b><span>1,280 samples at 16 kHz</span></div>
+          <div role="listitem"><span class="label">Model 1 · mel</span><b class="num">8 × 32</b><span>new mel frames from the audio</span></div>
+          <div role="listitem"><span class="label">Model 2 · embedding</span><b class="num">96</b><span>values from the last 76 mel frames</span></div>
+          <div role="listitem"><span class="label">Model 3 · “hey jarvis”</span><b class="num">0 – 1</b><span>a score from the last 16 embeddings</span></div>
+        </div>
+        <p class="pt-chain-note label">All three models run each 80 ms. On a PC, one step takes about 4 ms.</p>
+        <div class="pt-three">
+          <div><p class="label">What the tests showed</p><p>The model is trained on “hey jarvis”, but “Jarvis” alone also wakes it. With a short stop after the name (“Jarvis, goldfish”), text-to-speech tests score 0.78 to 0.999. Without the stop, 0.12 to 0.88. Other speech stays below 0.21.</p></div>
+          <div><p class="label">Party or snack?</p><p>“Hey Jarvis, disco” or “Hey Jarvis, let’s party” starts the dance party. A party word with other words is an item: “party mix” is a snack, and it goes to the chips.</p></div>
+          <div><p class="label">It keeps working</p><p>A watchdog opens the microphone again if the audio stops. If the browser blocks audio until a touch (after a reload), the home screen says “Touch the screen to turn on Hey Jarvis”. On a PC, the wake word is off by default.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-sec" id="lights" aria-labelledby="h-lights">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">04</span><span class="label sh">The guide lights</span><span class="label">Projection mapping on a wire shelf</span></div>
+        <div class="pt-intro">
+          <h2 id="h-lights" class="pt-h2">One lit spot is easy to miss. So every other LED points at it.</h2>
+          <p>A kid in the doorway sees three walls at once. A small green spot on the far side of the back wall is easy to miss. So the tablet uses all the other LEDs as arrows: they turn red, and ripples move in to the zone from every side, around corners and up and down the jumps between shelves.</p>
+        </div>
+        <div class="pt-split pt-split--wide">
+          <div class="pt-text">
+            <p>The tablet knows the 3D position of each LED, from the shelf lengths and the route of the string. For each LED it calculates the distance in meters to the nearest LED of the zone. The color of each LED then comes from that distance and the time:</p>
+            <pre class="pt-code" aria-label="The brightness formula"><code>glow  = 0.22 + 0.78 · e<sup>−d / 0.5 m</sup>
+wave  = ½ + ½ · cos 2π (d / 0.8 m + t / 1.2 s)
+level = 0.6 · glow · (0.25 + 0.75 · wave²)</code></pre>
+            <ul class="pt-list">
+              <li><b>The glow</b> makes LEDs near the zone brighter, so the eye finds the area first.</li>
+              <li><b>The wave</b> moves inward at about 0.67 m/s. The square makes each ripple a narrow, bright band, so the eye sees the motion.</li>
+              <li><b>At the start</b>, the light spreads out from the zone at 5 m/s. After 10 seconds, the red folds into the zone, and then the zone fades.</li>
+              <li><b>The zone</b> pulses green when a ripple arrives. A floor zone breathes pink on shelf 1 (“look below the light”). A shelf 5 zone breathes orange on shelf 4 (“look above the light”).</li>
+            </ul>
+          </div>
+          <figure class="pt-wavebox">
+            <div class="pt-stage-bar"><span class="label">Brightness against distance · live</span><span class="label num pt-wave-t">t = 0.0 s</span></div>
+            <canvas class="pt-wave" aria-label="A graph of LED brightness against the distance to the zone. Bright bands move toward zero distance."></canvas>
+            <figcaption class="label">0 m is the zone. Each band is a ripple that moves to the left: in to the zone.</figcaption>
+          </figure>
+        </div>
+        <div class="pt-three">
+          <div><p class="label">Frames, not effects</p><p>WLED has many built-in effects, but none of them know where a shelf is. So the tablet sends a full frame of 184 colors (the JSON “i” list) as fast as WLED takes it, about 12 to 20 times each second.</p></div>
+          <div><p class="label">Its own clock</p><p>If WLED is slow, the show clock waits. Between two frames, the clock moves a small step at most. A slow frame rate makes the ripples slower, but a ripple never jumps or seems to move back.</p></div>
+          <div><p class="label">Gamma on the tablet</p><p>The math works in perceptual values, like a screen. The tablet applies gamma 2.2 itself, with the WLED gamma off. A ripple is about 60 of 255 next to the zone, 19 at 0.5&nbsp;m, and 3 at 2&nbsp;m.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-sec" id="finder" aria-labelledby="h-finder">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">05</span><span class="label sh">The LED finder</span><span class="label">Structured light · 14 photos</span></div>
+        <div class="pt-intro">
+          <h2 id="h-finder" class="pt-h2">200 LEDs, one camera, and each LED blinks its own number.</h2>
+          <p>The light math needs the position of every LED. The default map comes from the measured shelf lengths and the route of the string, so it needs no setup. If a string sags or skips, a camera finds the true positions.</p>
+        </div>
+        <div class="pt-split pt-split--wide">
+          <figure class="pt-finder" aria-label="An animation of the LED finder. Each LED blinks the bits of its number, step by step.">
+            <div class="pt-stage-bar"><span class="label">Camera view · simulated</span><span class="label num pt-step">Step 01 / 14 · Lead</span></div>
+            <div class="pt-cam"></div>
+            <ol class="pt-steps-bar" aria-hidden="true"></ol>
+            <figcaption class="label">LED 56 blinks 56 + 1 = 57: bits 1, 0, 0, 1, 1, 1, 0, 0, bit 0 first.</figcaption>
+          </figure>
+          <div class="pt-text">
+            <p>The tablet plays 14 steps, one second each, and the camera takes one photo for each step:</p>
+            <ol class="pt-steps">
+              <li><b>Lead</b>: all off, time to start the camera.</li>
+              <li><b>Start</b>: all on. The “on” level of each LED.</li>
+              <li><b>Dark</b>: all off. The “off” level of each LED.</li>
+              <li><b>Bit 0 to bit 7</b>: LED <i>i</i> is on if that bit of <i>i</i> + 1 is 1. Eight bits count to 255, so 200 LEDs fit.</li>
+              <li><b>Parity</b>: on for an odd number of 1 bits. It finds most read errors.</li>
+              <li><b>End</b> and <b>tail</b>: all on, then all off.</li>
+            </ol>
+            <p>The decoder finds each point that changes between the photos, reads its bits, and checks the parity. Then it splits the points into rows where the string turns. A parent clicks one dot of each row to give it a shelf.</p>
+            <p class="pt-note label">LED <i>i</i> blinks <i>i</i> + 1, so no LED is dark in every bit step. The LEDs blink green: one color channel, so the current limiter does not dim them.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-sec" id="build" aria-labelledby="h-build">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">06</span><span class="label sh">The build</span><span class="label">WS2812B · ESP32 · WLED · a printed clip</span></div>
+        <div class="pt-intro">
+          <h2 id="h-build" class="pt-h2">One string, one snake, two power feeds.</h2>
+          <p>The first plan was a dense LED strip at 30 LEDs per meter. But a kid only needs the general area, so a pebble string with one LED every 10&nbsp;cm is enough. It is cheaper, it is easy to zip-tie to a wire shelf, and it bends around the corners.</p>
+        </div>
+
+        <figure class="pt-route">
+          <div class="pt-stage-bar"><span class="label">The route · the three walls unfolded</span><span class="label">4 shelves × 43 LEDs + 3 jumps × 4 = 184</span></div>
+          <div class="pt-route-svg"></div>
+          <figcaption class="label">The string goes along all three walls on one shelf, then up at the door end to the next shelf. A zig-zag on each wall needs 9 jumps and about 208 LEDs: too many for the two 100-LED strings.</figcaption>
+        </figure>
+
+        <div class="pt-split">
+          <div class="pt-text">
+            <table class="pt-table">
+              <caption class="label">Parts and cost (USD)</caption>
+              <tbody>
+                <tr><td>GLEDOPTO ESP32 WLED controller, with microphone</td><td class="num">$23.99</td></tr>
+                <tr><td>WS2812B pebble string, 2 × 10 m, 5 V, 200 LEDs</td><td class="num">$25.99</td></tr>
+                <tr><td>5 V 4 A power supply and barrel jack</td><td class="num">$10</td></tr>
+                <tr><td>18 AWG wire, about 4 m (or an old lamp cord)</td><td class="num">$0 – 8</td></tr>
+                <tr><td>Wire nuts or tape, and 200 zip ties</td><td class="num">$6 – 14</td></tr>
+                <tr><td>A tablet that we already had</td><td class="num">$0</td></tr>
+              </tbody>
+              <tfoot><tr><td>Total</td><td class="num">$66 – 82</td></tr></tfoot>
+            </table>
+            <ul class="pt-list">
+              <li><b>Two power feeds.</b> One at the controller and one at the junction of the two strings, near LED 100. Each LED is then at most about 10&nbsp;m from a feed. One lit zone takes less than 1&nbsp;A.</li>
+              <li><b>Red shows as green.</b> The pebble strings use the RGB color order; WLED expects GRB. The blue test light looks correct with both settings, so the test that matters uses red.</li>
+              <li><b>Metal shelves.</b> Tape goes over each unused plug, and no bare copper may touch a shelf.</li>
+            </ul>
+          </div>
+          <figure class="pt-photo">
+            <img src="assets/shots/pantry-back-right.webp" srcset="assets/shots/pantry-back-right-800.webp 800w, assets/shots/pantry-back-right-1200.webp 1200w, assets/shots/pantry-back-right.webp 1600w" sizes="(max-width: 899px) 100vw, 50vw" width="1600" height="1200" alt="The back and right walls of the pantry, full of boxes, jars and cans, before the LEDs went in." loading="lazy" decoding="async">
+            <figcaption class="label">The back and right walls, before the LEDs. The string goes on the front lip of shelves 1 to 4: with a zip tie every 20 to 30 cm, or with the printed clip below.</figcaption>
+          </figure>
+        </div>
+        <div class="pt-clip" id="clip">
+          <div class="pt-split">
+            <div class="pt-text">
+              <p class="label pt-sub">The mount · a printed clip</p>
+              <h3 class="pt-h3">A clip that snaps onto two wire bars.</h3>
+              <p>The front of each wire shelf is two round bars, one above the other. Zip ties hold the string. For a neater mount, I designed a clip to print:</p>
+              <ul class="pt-list">
+                <li><b>The top hook</b> sits on the top bar and carries the load.</li>
+                <li><b>The catch</b> snaps under the bottom bar, so the clip cannot lift off or swing out. Its tip gets thinner, down to 1.6&nbsp;mm, so it flexes about 0.5&nbsp;mm as the bar goes in.</li>
+                <li><b>The light hook</b> is a small U on the front. The LED string drops into it.</li>
+              </ul>
+              <p>The design is code. The profile is a chain of arcs. three.js extrudes it 10&nbsp;mm and exports the STL. Each dimension is a slider: the bar size, the gap, the clearance, the wall, the wrap of each hook, and the light hook. The design page warns when the snap is more than 1&nbsp;mm, because the catch can then break.</p>
+              <p>The part prints flat on its side, with no supports. PETG gives the best spring.</p>
+            </div>
+            <figure class="pt-clipbox">
+              <div class="pt-stage-bar"><span class="label">The profile · from the clip code</span><span class="label num pt-clip-size">13.8 × 43.5 × 10 mm</span></div>
+              <div class="pt-clip-svg"></div>
+              <div class="pt-clip-ctl">
+                <label class="label"><span>Bar Ø <b class="num" data-v="barD">6.1 mm</b></span><input type="range" data-k="barD" min="4" max="10" step="0.1" value="6.1"></label>
+                <label class="label"><span>Gap between the bars <b class="num" data-v="gap">26 mm</b></span><input type="range" data-k="gap" min="10" max="40" step="0.5" value="26"></label>
+              </div>
+              <div class="dr-met pt-clip-met">
+                <div><span class="v num" data-m="snap">0.52 mm</span><span class="label">snap of the catch</span></div>
+                <div><span class="v num" data-m="bore">Ø6.6 mm</span><span class="label">hook bore</span></div>
+                <div><span class="v num" data-m="D">32.1 mm</span><span class="label">bar centers apart</span></div>
+              </div>
+              <p class="pt-clip-warn label" hidden>More than 1 mm of snap: the catch can break.</p>
+              <figcaption class="label">Change the shelf. The drawing uses the same profile code as the STL. The defaults fit our shelves: 6.1&nbsp;mm bars, 26&nbsp;mm apart.</figcaption>
+            </figure>
+          </div>
+          <div class="pt-clip-renders">
+            <figure>
+              <img src="assets/shots/pantry-clip-iso.webp" srcset="assets/shots/pantry-clip-iso-800.webp 800w, assets/shots/pantry-clip-iso.webp 1300w" sizes="(max-width: 899px) 100vw, 50vw" width="1300" height="975" alt="A 3D render of the clip on the two shelf bars. The top hook sits over the top bar, the catch is under the bottom bar, and the LED string lies in the light hook." loading="lazy" decoding="async">
+              <figcaption class="label">The clip on the two bars, with the LED string in the light hook. A render of the STL model.</figcaption>
+            </figure>
+            <figure>
+              <img src="assets/shots/pantry-clip-part.webp" srcset="assets/shots/pantry-clip-part-800.webp 800w, assets/shots/pantry-clip-part.webp 1000w" sizes="(max-width: 899px) 100vw, 50vw" width="1000" height="750" alt="A 3D render of the clip alone: the top hook, the spine, the small light hook and the bottom catch." loading="lazy" decoding="async">
+              <figcaption class="label">The part alone. It prints on its side, on the profile face, 10&nbsp;mm high.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-sec" id="disco" aria-labelledby="h-disco">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">07</span><span class="label sh">Disco</span><span class="label">124 BPM · 30 s · no strobe</span></div>
+        <div class="pt-split pt-split--wide">
+          <div class="pt-text">
+            <h2 id="h-disco" class="pt-h2">And then there is the disco button.</h2>
+            <p>A pantry full of LEDs, a tablet with a speaker, and kids. The <b>🪩 Disco</b> button, “Hey Jarvis, disco” or “Hey Jarvis, party” starts a 30-second dance party.</p>
+            <ul class="pt-list">
+              <li><b>The music</b> comes from the Web Audio API on the tablet, at 124 BPM. No music file.</li>
+              <li><b>The light effect</b> changes each 2 bars, on the first beat of the bar.</li>
+              <li><b>One effect</b> reacts to sound through the microphone in the controller.</li>
+              <li><b>No strobe effects.</b> It is a party for kids.</li>
+            </ul>
+            <button type="button" class="btn-play pt-party"><span class="tri" aria-hidden="true"></span>Start the party here</button>
+            <p class="pt-note label">This model draws its own copies of four WLED effects, with no sound.</p>
+          </div>
+          <figure class="pt-stage pt-stage--disco">
+            <div class="pt-stage-bar"><span class="label">Live model · disco</span><span class="chip"><i></i><span class="pt-look">Ready</span></span></div>
+            <div class="pt-stage-view"><canvas class="pt-canvas2" aria-label="A model of the pantry LEDs. In disco mode, rainbow effects move along the string."></canvas></div>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-sec" id="details" aria-labelledby="h-details">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">08</span><span class="label sh">Around the edges</span><span class="label">The parts that make it a product</span></div>
+        <h2 id="h-details" class="pt-h2 pt-h2--solo">The small things that keep it on the wall.</h2>
+        <div class="pt-grid">
+          <div><p class="label">It updates itself</p><p>Each 5 minutes the tablet reads <code>version.json</code>. A new version loads only when nobody uses the tablet: the home screen shows, no lights are on, and nobody touched it or said the wake word for 1 minute.</p></div>
+          <div><p class="label">No secrets in the app</p><p>The app is a static page on GitHub Pages. Each tablet keeps its own OpenRouter key in its browser storage. A QR setup code copies the keys from a computer to the tablet.</p></div>
+          <div><p class="label">Zones from a photo</p><p>A parent takes one photo of a wall. Claude Sonnet makes the zones of that wall, for about $0.01 to $0.05. A zone editor then splits, merges and resizes them with the mouse, and lights each zone as you point at it.</p></div>
+          <div><p class="label">A home screen</p><p>When nobody asks the pantry anything, the tablet is a family wall display: the clock, the weather, and a 7-day calendar. A small Google Apps Script sends only the title, the time and the color of each event.</p></div>
+          <div><p class="label">A parent menu</p><p>A PIN keeps the kids out of the settings. A parent can check the learned items, change the light colors and the light time, test each zone, and back up the setup to another device.</p></div>
+          <div><p class="label">Tests</p><p>Vitest covers the zone math, the LED map, the light shows, the LED finder decoder, the learned items, the update rule and the wake word. The wake word test plays text-to-speech recordings through the real models.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pt-sec" id="log" aria-labelledby="h-log">
+      <div class="container">
+        <div class="rule" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="sec-head"><span class="label sh">09</span><span class="label sh">Build log</span><span class="label">13 days · 14 commits</span></div>
+        <h2 id="h-log" class="pt-h2 pt-h2--solo">Two weeks, start to “Hey Jarvis”.</h2>
+        <ol class="pt-time">
+          <li><span class="label num">Nov 13</span><p>Two photos of the pantry, and a first list of 30 zones from them.</p></li>
+          <li><span class="label num">Nov 14</span><p>The scan app: barcode, photo, an AI zone choice, Jev, and the first WLED lights. The pebble-string plan.</p></li>
+          <li><span class="label num">Nov 15</span><p>The LED finder, the mouse zone editor, and the colors for the floor and the top shelf.</p></li>
+          <li><span class="label num">Nov 21</span><p>The home screen: clock, weather, calendar, and the pantry panel.</p></li>
+          <li><span class="label num">Nov 26</span><p>The setup code, voice input, the disco, the measured LED map, the guide lights, the 3D distance, learned spoken items, updates on the wall, “Hey Jarvis” all day, and the printed clip for the string.</p></li>
+        </ol>
+        <div class="dr-stack pt-stack">
+          <span>Preact</span><span>TypeScript</span><span>Vite</span><span>onnxruntime-web</span><span>openWakeWord</span><span>zxing-wasm</span><span>Web Audio</span><span>WLED</span><span>ESP32</span><span>WS2812B</span><span>OpenRouter</span><span>Claude Haiku</span><span>Claude Sonnet</span><span>Gemini Flash Lite</span><span>Jev</span><span>Open Food Facts</span><span>Google Apps Script</span><span>Vitest</span><span>three.js</span><span>STL</span><span>PETG</span><span>GitHub Pages</span>
+        </div>
+        <p class="label pt-credit">Wake word models: openWakeWord by David Scripka (CC BY-NC-SA 4.0). LED firmware: WLED. Product data: Open Food Facts.</p>
+        <a class="pt-backlink" href="./#work"><span aria-hidden="true">←</span> Back to all work</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="container">
+      <p class="f-l label">© 2026 Jon von Gillern</p>
+      <p class="f-r label">Set in Geist and Geist Mono · The pantry model is drawn live in your browser</p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/pantry.min.js?v=423094236d"></script>
+</body>
+</html>
